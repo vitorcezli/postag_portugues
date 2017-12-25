@@ -38,6 +38,21 @@ class classificador_postag:
 		return [max(valores), valores.index(max(valores))]
 
 
+	def __diminui_risco_underflow(self, matriz, estado):
+		"Reduz o risco de overflow nos estados multiplicando a probabilidade"
+		if estado % 5 == 0:
+			for linha in range(len(matriz)):
+				matriz[linha][estado] *= 100000
+
+
+	def __pega_pos(self, ultima_coluna, ponteiros):
+		"Retorna classificações 'part-of-speech' utilizando os ponteiros"
+		ponteiros_inversos = [ultima_coluna.index(max(ultima_coluna))]
+		for i in range(len(ponteiros[0]) - 1, -1, -1):
+			ponteiros_inversos.append(ponteiros[-1][i])
+		return list(reversed([self.tags[indice] for indice in ponteiros_inversos]))[: -1]
+
+
 	def classifica(self, frase):
 		"Retorna 'part-of-speech tagging' da frase passada para esta função"
 		# inicializa as variáveis do algoritmo Viterbi
@@ -51,31 +66,17 @@ class classificador_postag:
 		for j in range(1, len(frase)):
 			observacoes = self.__pega_observacao(frase[j])
 			for i in range(len(self.tags)):
-				[valor, indice] = self.__pega_maior_indice_valor(estados, j - 1, self.tags[i])
-				estados[i][j] = valor
-				ponteiros[i][j - 1] = indice
+				[estados[i][j], ponteiros[i][j - 1]] = \
+					self.__pega_maior_indice_valor(estados, j - 1, self.tags[i])
 				estados[i][j] *= observacoes[i]
-				# esta operação é utilizada para evitar underflow
-				if j % 5 == 0:
-					estados[i][j] *= 100000
+			self.__diminui_risco_underflow(estados, j)
 		# calcula os estados finais
 		for i in range(len(self.tags)):
-			[valor, indice] = self.__pega_maior_indice_valor(estados, len(frase) - 1, self.tags[i])
-			estados[i][len(frase)] = valor
-			ponteiros[i][len(frase) - 1] = indice
+			[estados[i][len(frase)], ponteiros[i][len(frase) - 1]] = \
+				self.__pega_maior_indice_valor(estados, len(frase) - 1, self.tags[i])
 		# usa os ponteiros para definir part-of-speech
-		ultima_coluna = [linha[len(linha) - 1] for linha in estados]
-		ponteiros_inversos = [ultima_coluna.index(max(ultima_coluna))]
-		indice = len(ponteiros[0]) - 1
-		while indice >= 0:
-			ultimo_valor = ponteiros_inversos[len(ponteiros_inversos) - 1]
-			ponteiros_inversos.append(ponteiros[ultimo_valor][indice])
-			indice -= 1
-		# define part-of-speech
-		tags = []
-		for i in range(len(ponteiros_inversos) - 1, 0, -1):
-			tags.append(self.tags[ponteiros_inversos[i]])
-		return tags
+		return self.__pega_pos([linha[len(linha) - 1] for linha in estados], ponteiros)
+		
 
 
 anotador = classificador_postag()
