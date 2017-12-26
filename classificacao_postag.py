@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 from __future__ import division
+from conversor_postag import converte_palavra_lista
 import pickle
 import math
 
 
-# verificar features utilizando dimensão R
-# treinar um classificador para as palavras, que será utilizado nas que não são reconhecidas
-# dividir o resultado do classificador pela probabilidade da tag no algoritmo Viterbi
 # testar o corpus de teste
 class classificador_postag:
 
@@ -17,13 +15,52 @@ class classificador_postag:
 		self.bigram = pickle.load(open('bigram.sav', 'rb'))
 		self.observacao = pickle.load(open('observacao.sav', 'rb'))
 		self.tags = pickle.load(open('tags.sav', 'rb'))
+		self.classificador = pickle.load(open('classificador.sav', 'rb'))
+		self.tags_probabilidades = self.__tags_probabilidades()
+
+
+	def __tags_probabilidades(self):
+		"Retorna a probabilidade de ocorrência de cada tag"
+		total = sum([valor for tag, valor in self.unigram.items() if tag != '<s>'])
+		return [self.unigram[self.tags[i]] / total for i in range(len(self.tags))]
+
+
+	def __e_numero(self, palavra):
+		"Retorna se a palavra é um número"
+		try:
+			numero = float(palavra)
+			return True
+		except ValueError:
+			pass
+		return False
+
+
+	def __define_probabilidade_tag(self, tag):
+		"Retorna uma lista com a probabilidade de uma tag definida em 1"
+		return [1 if t == tag else 0 for t in self.tags]
 
 
 	def __pega_observacao(self, palavra):
 		"Retorna a probabilidade de observar a palavra para cada tag"
 		tags = [self.observacao.get((tag, palavra), 0) / self.unigram[tag] \
 			for tag in self.tags]
-		return tags
+		# palavra já é reconhecida
+		if any(tag > 0 for tag in tags):
+			return tags
+		# palavra é um número
+		elif self.__e_numero(palavra):
+			return self.__define_probabilidade_tag('NUM')
+		# testa se a mesma palavra com a primeira letra minúscula é reconhecida
+		elif palavra[0].isupper():
+			palavra = palavra[0].lower() + palavra[1 :]
+			observacao_lower = self.__pega_observacao(palavra)
+			if any(tag > 0 for tag in observacao_lower):
+				return observacao_lower
+		# calcula o likelihood usando o classificador que foi treinado
+		posteriores = self.classificador.predict_proba([[ord(c) \
+			for c in converte_palavra_lista(palavra, 6)]])[0]
+		return [posteriores[i] / self.tags_probabilidades[i] \
+			for i in range(len(posteriores))]
 
 
 	def __pega_transicao(self, tag1, tag2):
@@ -80,6 +117,6 @@ class classificador_postag:
 
 
 anotador = classificador_postag()
-texto = 'O grande assunto da semana em Nova York é a edição da revista \" New Yorker \" que está nas bancas .'
+texto = 'É Natal. Tempo de amor e paz .'
 print(texto.split())
 print(anotador.classifica(texto.split()))

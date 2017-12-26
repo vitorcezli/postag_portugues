@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-from sklearn.model_selection import cross_val_score
 from leitor_postag import leia_palavras_postags
 from leitor_postag import leia_postag_por_palavra
 from sklearn.ensemble import RandomForestClassifier
@@ -36,18 +35,13 @@ for linha in lista_palavras_tags:
 # postag na última coluna
 palavras_tags = leia_postag_por_palavra('macmorpho-train.txt')
 # a variável tags é utilizada para indexar as classificações
-tags = list(set(list(unigrams.keys())))
+tags = list(set(linha[-1] for linha in palavras_tags))
 # as árvores de decisão de Random Forest necessitam de valores numéricos
 # nos atributos e nas classificações
 data_x = [[ord(c) for c in linha[: -1]] for linha in palavras_tags]
 data_y = [tags.index(linha[-1]) for linha in palavras_tags]
-
-# inicializa o classificador de RandomForest
+# treina o classificador de RandomForest
 classificador = RandomForestClassifier()
-# testa o modelo em 30 k-folds
-resultados = cross_val_score(classificador, data_x, data_y, cv = 30)
-print("Acerto: %.2f%% (%.2f%%)" % (resultados.mean() * 100, resultados.std() * 100))
-# treina o classificador
 classificador.fit(data_x, data_y)
 
 # salva os dados do classificador e das informações para o algoritmo Viterbi
