@@ -77,10 +77,10 @@ class classificador_postag:
 
 	def __diminui_risco_underflow(self, matriz, estado):
 		"Reduz o risco de overflow nos estados multiplicando a probabilidade"
-		max_value = max([matriz[i][estado] for i in range(len(matriz))])
-		if max_value != 0:
+		maximo = max([matriz[i][estado] for i in range(len(matriz))])
+		if maximo != 0:
 			for linha in range(len(matriz)):
-				matriz[linha][estado] /= max_value
+				matriz[linha][estado] /= maximo
 
 
 	def __pega_pos(self, ultima_coluna, ponteiros):
