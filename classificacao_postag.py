@@ -77,16 +77,17 @@ class classificador_postag:
 
 	def __diminui_risco_underflow(self, matriz, estado):
 		"Reduz o risco de overflow nos estados multiplicando a probabilidade"
-		if estado % 5 == 0:
+		max_value = max([matriz[i][estado] for i in range(len(matriz))])
+		if max_value != 0:
 			for linha in range(len(matriz)):
-				matriz[linha][estado] *= 100000
+				matriz[linha][estado] /= max_value
 
 
 	def __pega_pos(self, ultima_coluna, ponteiros):
 		"Retorna classificações 'part-of-speech' utilizando os ponteiros"
 		ponteiros_inversos = [ultima_coluna.index(max(ultima_coluna))]
 		for i in range(len(ponteiros[0]) - 1, -1, -1):
-			ponteiros_inversos.append(ponteiros[-1][i])
+			ponteiros_inversos.append(ponteiros[ponteiros_inversos[-1]][i])
 		return list(reversed([self.tags[indice] for indice in ponteiros_inversos]))[: -1]
 
 
