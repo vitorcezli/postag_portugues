@@ -114,22 +114,3 @@ class classificador_postag:
 				self.__pega_maior_indice_valor(estados, len(frase) - 1, self.tags[i])
 		# usa os ponteiros para definir part-of-speech
 		return self.__pega_pos([linha[len(linha) - 1] for linha in estados], ponteiros)
-	
-
-def soma_acerto(classificacao, resultados):
-	"Retorna a quantidade de acertos"
-	return sum([1 if classificacao[i] == resultados[i] \
-		else 0 for i in range(len(resultados))])
-
-
-def testa_corpus():
-	"Testa as classificações no corpus de teste"
-	anotador = classificador_postag()
-	dados_teste = leia_palavras_postags('macmorpho-test.txt')
-	total = sum([len(dados_teste[i][1]) for i in range(len(dados_teste))])
-	acertos = sum([soma_acerto(anotador.classifica(dados_teste[i][0]), dados_teste[i][1]) \
-		for i in range(len(dados_teste))])
-	print(acertos / total)
-
-
-testa_corpus()
