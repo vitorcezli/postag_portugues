@@ -1,9 +1,14 @@
-#!/usr/bin/python3
 from __future__ import division
+
+import math
+import pickle
+
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
 from conversor_postag import converte_palavra_lista
 from leitor_postag import leia_palavras_postags
-import pickle
-import math
 
 
 class classificador_postag:
@@ -107,13 +112,16 @@ class classificador_postag:
 
 
 classificador = classificador_postag()
-frases_tags = leia_palavras_postags('macmorpho-dev.txt')
-total = 0
-erro = 0
+tag_set = classificador.tags
+heatmap = np.zeros((len(tag_set), len(tag_set)))
+frases_tags = leia_palavras_postags('macmorpho-test.txt')
 for frases, tags in frases_tags:
 	resultados = classificador.classifica(frases)
 	for r1, r2 in zip(tags, resultados):
-		total += 1
-		if r1 != r2:
-			erro += 1
-print((total - erro) / total)
+		linha = tag_set.index(r1)
+		coluna = tag_set.index(r2)
+		heatmap[linha, coluna] += 1
+heatmap /= heatmap.sum(axis=1, keepdims=True)
+heatmap *= 100
+sns.heatmap(heatmap, xticklabels=tag_set, yticklabels=tag_set, annot=True, fmt='.1f')
+plt.show()
