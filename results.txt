@@ -1,4 +1,4 @@
-random-forest: 0.9527
+random-forest: 0.9528
 logistic-regression: 0.9477
 sgd (log): 0.8931
 sgd (modified huber): 0.9334
@@ -8,3 +8,5 @@ decision_tree: 0.9493
 adaboost: 0.9388
 gaussian_nb: 0.9404
 quadratic_discriminant_analysis: 0.6901
+
+Resultado final usando RandomForest: 0.942
