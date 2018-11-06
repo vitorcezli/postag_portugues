@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from leitor_postag import leia_palavras_postags
 from leitor_postag import leia_postag_por_palavra
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC
 import copy
 import numpy as np
 import pickle
@@ -30,7 +30,6 @@ for linha in lista_palavras_tags:
 	for i in range(1, len(tags)):
 		bigrams[tags[i - 1], tags[i]] = bigrams.get((tags[i - 1], tags[i]), 0) + 1
 	bigrams[tags[len(tags) - 1], '</s>'] = bigrams.get((tags[len(tags) - 1], '</s>'), 0) + 1
-
 # lê as palavras do corpus em forma de lista e com a classificação de
 # postag na última coluna
 palavras_tags = leia_postag_por_palavra('macmorpho-train.txt')
@@ -41,9 +40,8 @@ tags = list(set(linha[-1] for linha in palavras_tags))
 data_x = [[ord(c) for c in linha[: -1]] for linha in palavras_tags]
 data_y = [tags.index(linha[-1]) for linha in palavras_tags]
 # treina o classificador de RandomForest
-classificador = RandomForestClassifier()
+classificador = SVC()
 classificador.fit(data_x, data_y)
-
 # salva os dados do classificador e das informações para o algoritmo Viterbi
 pickle.dump(classificador, open('classificador.sav', 'wb'))
 pickle.dump(observacoes, open('observacao.sav', 'wb'))

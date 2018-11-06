@@ -8,7 +8,6 @@ import math
 
 class classificador_postag:
 
-
 	def __init__(self):
 		"Inicializa as variáveis que serão utilizadas em 'part-of-speech tagging'"
 		self.unigram = pickle.load(open('unigram.sav', 'rb'))
@@ -18,12 +17,10 @@ class classificador_postag:
 		self.classificador = pickle.load(open('classificador.sav', 'rb'))
 		self.tags_probabilidades = self.__tags_probabilidades()
 
-
 	def __tags_probabilidades(self):
 		"Retorna a probabilidade de ocorrência de cada tag"
 		total = sum([valor for tag, valor in self.unigram.items() if tag != '<s>'])
 		return [self.unigram[self.tags[i]] / total for i in range(len(self.tags))]
-
 
 	def __e_numero(self, palavra):
 		"Retorna se a palavra é um número"
@@ -34,11 +31,9 @@ class classificador_postag:
 			pass
 		return False
 
-
 	def __define_probabilidade_tag(self, tag):
 		"Retorna uma lista com a probabilidade de uma tag definida em 1"
 		return [1 if t == tag else 0 for t in self.tags]
-
 
 	def __pega_observacao(self, palavra):
 		"Retorna a probabilidade de observar a palavra para cada tag"
@@ -62,18 +57,15 @@ class classificador_postag:
 		return [posteriores[i] / self.tags_probabilidades[i] \
 			for i in range(len(posteriores))]
 
-
 	def __pega_transicao(self, tag1, tag2):
 		"Retorna a probabilidade de transição entre tags"
 		return self.bigram.get((tag1, tag2), 0) / self.unigram.get(tag1, 0)	
-
 
 	def __pega_maior_indice_valor(self, matriz, estado, tag):
 		"Retorna a maior probabilidade e o índice em um estado no algoritmo de Viterbi"
 		valores = [matriz[k][estado] * self.__pega_transicao(self.tags[k], tag) \
 			for k in range(len(self.tags))]
 		return [max(valores), valores.index(max(valores))]
-
 
 	def __diminui_risco_underflow(self, matriz, estado):
 		"Reduz o risco de overflow nos estados multiplicando a probabilidade"
@@ -82,14 +74,12 @@ class classificador_postag:
 			for linha in range(len(matriz)):
 				matriz[linha][estado] /= maximo
 
-
 	def __pega_pos(self, ultima_coluna, ponteiros):
 		"Retorna classificações 'part-of-speech' utilizando os ponteiros"
 		ponteiros_inversos = [ultima_coluna.index(max(ultima_coluna))]
 		for i in range(len(ponteiros[0]) - 1, -1, -1):
 			ponteiros_inversos.append(ponteiros[ponteiros_inversos[-1]][i])
 		return list(reversed([self.tags[indice] for indice in ponteiros_inversos]))[: -1]
-
 
 	def classifica(self, frase):
 		"Retorna 'part-of-speech tagging' da frase passada para esta função"
@@ -114,3 +104,16 @@ class classificador_postag:
 				self.__pega_maior_indice_valor(estados, len(frase) - 1, self.tags[i])
 		# usa os ponteiros para definir part-of-speech
 		return self.__pega_pos([linha[len(linha) - 1] for linha in estados], ponteiros)
+
+
+classificador = classificador_postag()
+frases_tags = leia_palavras_postags('macmorpho-dev.txt')
+total = 0
+erro = 0
+for frases, tags in frases_tags:
+	resultados = classificador.classifica(frases)
+	for r1, r2 in zip(tags, resultados):
+		total += 1
+		if r1 != r2:
+			erro += 1
+print((total - erro) / total)
