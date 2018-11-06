@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 from leitor_postag import leia_palavras_postags
 from leitor_postag import leia_postag_por_palavra
-from sklearn.svm import SVC
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 import copy
 import numpy as np
 import pickle
@@ -40,7 +40,7 @@ tags = list(set(linha[-1] for linha in palavras_tags))
 data_x = [[ord(c) for c in linha[: -1]] for linha in palavras_tags]
 data_y = [tags.index(linha[-1]) for linha in palavras_tags]
 # treina o classificador de RandomForest
-classificador = SVC()
+classificador = QuadraticDiscriminantAnalysis()
 classificador.fit(data_x, data_y)
 # salva os dados do classificador e das informações para o algoritmo Viterbi
 pickle.dump(classificador, open('classificador.sav', 'wb'))
