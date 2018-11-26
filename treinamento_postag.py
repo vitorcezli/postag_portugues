@@ -52,13 +52,13 @@ def treina_hmm(treinamento):
 
 class classificador_postag:
 
-	def __init__(self):
+	def __init__(self, classificador, observacoes, unigrams, bigrams, tags):
 		"Inicializa as variáveis que serão utilizadas em 'part-of-speech tagging'"
-		self.unigram = pickle.load(open('unigram.sav', 'rb'))
-		self.bigram = pickle.load(open('bigram.sav', 'rb'))
-		self.observacao = pickle.load(open('observacao.sav', 'rb'))
-		self.tags = pickle.load(open('tags.sav', 'rb'))
-		self.classificador = pickle.load(open('classificador.sav', 'rb'))
+		self.unigram = unigrams
+		self.bigram = bigrams
+		self.observacao = observacoes
+		self.tags = tags
+		self.classificador = classificador
 		self.tags_probabilidades = self.__tags_probabilidades()
 
 	def __tags_probabilidades(self):
@@ -151,7 +151,7 @@ class classificador_postag:
 
 
 def heatmap():
-	classificador = classificador_postag()
+	classificador = classificador_postag(0,0,0,0,0)
 	tag_set = classificador.tags
 	heatmap = np.zeros((len(tag_set), len(tag_set)))
 	frases_tags = leitor_postag.leia_palavras_postags('macmorpho-test.txt')
@@ -169,6 +169,20 @@ def heatmap():
 
 if __name__ == '__main__':
 	for i in range(30):
-		treinamento, validacao = leitor_postag.treinamento_validacao('data.txt', 30, i)
-		[classificador, observacoes, unigrams, bigrams, tags] = treina_hmm(treinamento)
-		print(i)
+		treinamento, validacao, dicts_tag = leitor_postag.treinamento_validacao('data.txt', 30, i)
+		classificador, observacoes, unigrams, bigrams, tags = treina_hmm(treinamento)
+		classificador = classificador_postag(classificador, observacoes, unigrams, bigrams, tags)
+		frases_tags = leitor_postag.leia_palavras_postags(validacao)
+		acertos = 0
+		total = 0
+		for index, ft in enumerate(frases_tags):
+			frase, tags = ft
+			resultados = classificador.classifica(frase)
+			for j in range(len(resultados)):
+				if tags[j] in dicts_tag and frase[j] in dicts_tag[tags[j]]:
+					if resultados[j] == tags[j]:
+						acertos += 1
+					total += 1
+			print(index, len(frases_tags))
+		print(i, acertos / total)
+		break

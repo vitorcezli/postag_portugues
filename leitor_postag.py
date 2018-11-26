@@ -65,7 +65,10 @@ def treinamento_validacao(arquivo, tamanho_divisao, numeracao):
 				break
 		if not se_validacao:
 			treinamento.append(linha)
-	return treinamento, validacao
+	dicts_tag = dict()
+	for key in sets_dict:
+		dicts_tag[key] = sets_dict[key][numeracao]
+	return treinamento, validacao, dicts_tag
 
 
 def leia_palavras_postags(linhas):
